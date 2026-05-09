@@ -9,6 +9,7 @@ from app.auth.dependencies import get_current_user
 from app.models.user_model import User
 from app.models.client_model import Client
 from app.models.payment_model import Payment
+from app.models.communication_model import Announcement
 
 allow_admin = RoleChecker(["admin"])
 allow_staff = RoleChecker(["admin", "trainer"])
@@ -81,6 +82,16 @@ def delete_trainer(trainer_id: int, db: Session = Depends(get_db), current_user:
     if user_id:
         db.query(Payment).filter(Payment.created_by == user_id).update(
             {Payment.created_by: None},
+            synchronize_session=False
+        )
+        # Handle announcements sent by this trainer
+        db.query(Announcement).filter(Announcement.sender_id == user_id).update(
+            {Announcement.sender_id: None},
+            synchronize_session=False
+        )
+        # Handle announcements received by this trainer (if any)
+        db.query(Announcement).filter(Announcement.recipient_id == user_id).update(
+            {Announcement.recipient_id: None},
             synchronize_session=False
         )
         user = db.query(User).filter(User.id == user_id).first()

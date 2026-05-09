@@ -7,7 +7,7 @@ class Announcement(Base):
     __tablename__ = "announcements"
 
     id = Column(Integer, primary_key=True, index=True)
-    sender_id = Column(Integer, ForeignKey("users.id"))
+    sender_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     recipient_id = Column(Integer, ForeignKey("users.id"), nullable=True) # Null = Broadcast to all
     
     title = Column(String)
