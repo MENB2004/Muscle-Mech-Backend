@@ -16,9 +16,11 @@ class Client(Base):
     goal = Column(String)
     join_date = Column(DateTime, default=datetime.utcnow)
     monthly_fee = Column(Float, default=2000.0)
+    trainer_id = Column(Integer, ForeignKey("trainers.id"), nullable=True)
     
     # Relationships
     user = relationship("User", back_populates="client_profile")
+    trainer = relationship("Trainer")
 
     @property
     def name(self):
