@@ -82,6 +82,11 @@ def create_client_with_user(client_data: ClientWithUserCreate, db: Session = Dep
         phone=client_data.phone,
         monthly_fee=client_data.monthly_fee,
     )
+
+    if current_user.role == "trainer":
+        trainer = db.query(Trainer).filter(Trainer.user_id == current_user.id).first()
+        if trainer:
+            new_client.trainer_id = trainer.id
     db.add(new_client)
     db.commit()
     db.refresh(new_client)
