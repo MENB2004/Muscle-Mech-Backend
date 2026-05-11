@@ -97,8 +97,6 @@ def create_client_with_user(client_data: ClientWithUserCreate, db: Session = Dep
     db.commit()
     db.refresh(new_client)
     
-    # Manually populate name for response if it's an existing user
-    new_client.name = new_user.name 
     return new_client
 
 @router.get("/{client_id}", response_model=ClientResponse)
