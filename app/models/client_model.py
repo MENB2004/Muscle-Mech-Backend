@@ -25,3 +25,7 @@ class Client(Base):
     @property
     def name(self):
         return self.user.name if self.user else ""
+
+    @property
+    def email(self):
+        return self.user.email if self.user else ""

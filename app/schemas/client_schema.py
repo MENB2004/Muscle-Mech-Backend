@@ -53,6 +53,7 @@ class ClientResponse(ClientBase):
     id: int
     user_id: int
     name: str # From User
+    email: str # From User
     join_date: datetime
     
     # Dynamic fields from payment_service
