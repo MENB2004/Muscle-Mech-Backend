@@ -21,7 +21,9 @@ router = APIRouter(
 
 @router.get("/", response_model=List[ClientResponse])
 def get_clients(db: Session = Depends(get_db), current_user: User = Depends(allow_all)):
-    query = db.query(Client)
+    from sqlalchemy.orm import joinedload
+    query = db.query(Client).options(joinedload(Client.user))
+    
     if current_user.role in ["admin", "trainer"]:
         clients = query.all()
     else: # client
@@ -33,10 +35,7 @@ def get_clients(db: Session = Depends(get_db), current_user: User = Depends(allo
         c.membership_status = fee_data["membership_status"]
         c.next_due_date = fee_data["next_due_date"]
         c.days_remaining = fee_data["days_remaining"]
-        if hasattr(c, 'user') and c.user:
-            c.avatar_url = c.user.avatar_url
-        else:
-            c.avatar_url = None
+        c.avatar_url = c.user.avatar_url if c.user else None
         
     return clients
 
