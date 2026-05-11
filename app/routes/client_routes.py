@@ -56,26 +56,31 @@ def create_client(client_data: ClientCreate, db: Session = Depends(get_db), curr
 @router.post("/with-user", response_model=ClientResponse, status_code=status.HTTP_201_CREATED)
 def create_client_with_user(client_data: ClientWithUserCreate, db: Session = Depends(get_db), current_user: User = Depends(allow_staff)):
     existing_user = db.query(User).filter(User.email == client_data.email).first()
+    
     if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-
-
-
-    new_user = User(
-        name=client_data.name,
-        email=client_data.email,
-        password=hash_password(client_data.password),
-        role="client",
-        avatar_url=client_data.avatar_url,
-        must_change_password=True,
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+        # Check if they already have a client profile
+        existing_client = db.query(Client).filter(Client.user_id == existing_user.id).first()
+        if existing_client:
+            raise HTTPException(status_code=400, detail="A client with this phone number already exists.")
+        
+        # User exists but no client profile - we can link them
+        new_user = existing_user
+    else:
+        # Create new user
+        new_user = User(
+            name=client_data.name,
+            email=client_data.email,
+            password=hash_password(client_data.password),
+            role="client",
+            avatar_url=client_data.avatar_url,
+            must_change_password=True,
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
 
     new_client = Client(
         user_id=new_user.id,
-
         goal=client_data.goal,
         height=client_data.height,
         weight=client_data.weight,
@@ -87,9 +92,13 @@ def create_client_with_user(client_data: ClientWithUserCreate, db: Session = Dep
         trainer = db.query(Trainer).filter(Trainer.user_id == current_user.id).first()
         if trainer:
             new_client.trainer_id = trainer.id
+    
     db.add(new_client)
     db.commit()
     db.refresh(new_client)
+    
+    # Manually populate name for response if it's an existing user
+    new_client.name = new_user.name 
     return new_client
 
 @router.get("/{client_id}", response_model=ClientResponse)
